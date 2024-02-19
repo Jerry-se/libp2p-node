@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/libp2p/go-libp2p"
-	peerstore "github.com/libp2p/go-libp2p-core/peer"
+	peerstore "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	multiaddr "github.com/multiformats/go-multiaddr"
 )
@@ -17,12 +17,16 @@ func main() {
 	// start a libp2p node that listens on a random local TCP port,
 	// but without running the built-in ping protocol
 	node, err := libp2p.New(
-		libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0"),
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 		libp2p.Ping(false),
 	)
 	if err != nil {
 		panic(err)
 	}
+
+	// print the node's listening addresses
+	fmt.Println("Listen addresses:", node.Addrs())
+	fmt.Println("Node id:", node.ID())
 
 	// configure our own ping protocol
 	pingService := &ping.PingService{Host: node}
@@ -34,9 +38,6 @@ func main() {
 		Addrs: node.Addrs(),
 	}
 	addrs, err := peerstore.AddrInfoToP2pAddrs(&peerInfo)
-	if err != nil {
-		panic(err)
-	}
 	fmt.Println("libp2p node address:", addrs[0])
 
 	// if a remote peer has been passed on the command line, connect to it
