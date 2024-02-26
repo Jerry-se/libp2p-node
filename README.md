@@ -31,7 +31,7 @@ libp2p + IPFS + Stable Diffusion
 2. go build -o go-libp2p-tutorial.exe go-libp2p-tutorial\main.go
 
 go build -o libp2p-address.exe app1\main.go
-go test -v -timeout 30s -run TestPeerKey p2p-node/pkg/config
+go test -v -timeout 30s -count=1 -run TestPeerKey github.com/Jerry-se/libp2p-node/pkg/config
 
 ## 参考资料
 
