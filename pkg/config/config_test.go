@@ -51,5 +51,10 @@ func TestPeerKey(t *testing.T) {
 		} else {
 			t.Logf("Transform Peer ID %v", id)
 		}
+		privkeyBytes, err := crypto.MarshalPrivateKey(priv)
+		if err != nil {
+			t.Fatalf("Marshal Private Key err: %v", err)
+		}
+		t.Logf("Encode private key: %q", crypto.ConfigEncodeKey(privkeyBytes))
 	}
 }
