@@ -7,12 +7,16 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Jerry-se/libp2p-node/pkg/config"
 
 	"github.com/libp2p/go-libp2p"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -63,14 +67,21 @@ func doEcho(s network.Stream) error {
 }
 
 func main() {
-	golog.SetAllLoggers(golog.LevelInfo)
-
+	logLevelString := flag.String("logLevel", "info",
+		"log severity level in [debug, info, warn, error ...]")
 	listenF := flag.Int("l", 6000, "listening port waiting for incoming connections")
 	pskString := flag.String("psk", "", "Pre-Shared Key")
 	peerKeyPath := flag.String("peerkey", "", "the file path of peer key")
 	ping := flag.Bool("ping", false, "whether to enable ipfs ping")
 	protocolPrefix := flag.String("protocol", "", "the prefix attached to all DHT protocols")
+	topicNameFlag := flag.String("topicName", "applesauce", "name of topic to join")
 	flag.Parse()
+
+	logLevel, err := golog.LevelFromString(*logLevelString)
+	if err != nil {
+		panic(err)
+	}
+	golog.SetAllLoggers(logLevel)
 
 	if *peerKeyPath == "" {
 		log.Fatal("Please provide a filepath to save peer key")
@@ -102,8 +113,6 @@ func main() {
 		// Multiple listen addresses
 		libp2p.ListenAddrStrings(
 			fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", *listenF),
-			fmt.Sprintf("/ip4/0.0.0.0/udp/%d/quic-v1", *listenF),
-			fmt.Sprintf("/ip4/0.0.0.0/udp/%d/quic-v1/webtransport", *listenF),
 			// "/ip4/0.0.0.0/tcp/0",
 			// "/ip4/0.0.0.0/udp/0/quic-v1",
 			// "/ip4/0.0.0.0/udp/0/quic-v1/webtransport",
@@ -114,19 +123,18 @@ func main() {
 		// Use the keypair we generated
 		libp2p.Identity(peerKey),
 		libp2p.Ping(*ping),
-		// libp2p.DefaultPrivateTransports,
-		libp2p.DefaultTransports,
+		libp2p.DefaultPrivateTransports,
+		// libp2p.DefaultTransports,
 		// Let's prevent our peer from having too many
 		// connections by attaching a connection manager.
 		libp2p.ConnectionManager(connmgr),
-		// libp2p.DefaultMuxers,
+		libp2p.DefaultMuxers,
 		libp2p.DefaultSecurity,
 		// Attempt to open ports using uPNP for NATed hosts.
-		libp2p.NATPortMap(),
+		// libp2p.NATPortMap(),
 		libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
 			dhtOpts := []dht.Option{
-				dht.Mode(dht.ModeServer),
-				dht.BucketSize(20),
+				dht.Mode(dht.ModeAutoServer),
 			}
 			if *protocolPrefix != "" {
 				dhtOpts = append(dhtOpts, dht.ProtocolPrefix(protocol.ID(*protocolPrefix)))
@@ -134,7 +142,7 @@ func main() {
 			kadDHT, err = dht.New(ctx, h, dhtOpts...)
 			return kadDHT, err
 		}),
-		libp2p.ProtocolVersion("ipfs/0.1.0"),
+		// libp2p.ProtocolVersion("ipfs/0.1.0"),
 		// If you want to help other peers to figure out if they are behind
 		// NATs, you can launch the server-side of AutoNAT too (AutoRelay
 		// already runs the client)
@@ -216,6 +224,39 @@ func main() {
 		log.Fatalf("Bootstrap the host: %v", err)
 	}
 
+	ps, err := pubsub.NewGossipSub(ctx, node)
+	if err != nil {
+		log.Fatalf("New GossipSub: %v", err)
+	}
+	topic, err := ps.Join(*topicNameFlag)
+	if err != nil {
+		log.Fatalf("Join GossipSub: %v", err)
+	}
+	defer topic.Close()
+	sub, err := topic.Subscribe()
+	if err != nil {
+		log.Fatalf("Subscribe GossipSub: %v", err)
+	}
+	go pubsubHandler(ctx, sub)
+
 	log.Println("listening for connections")
-	select {} // hang forever
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	// select {} // hang forever
+	<-stop
+	node.Close()
+}
+
+func pubsubHandler(ctx context.Context, sub *pubsub.Subscription) {
+	defer sub.Cancel()
+	for {
+		msg, err := sub.Next(ctx)
+		if err != nil {
+			log.Println("Read GossipSub: ", err)
+			continue
+		}
+
+		log.Println(msg.ReceivedFrom, ": ", string(msg.Message.Data))
+	}
 }
