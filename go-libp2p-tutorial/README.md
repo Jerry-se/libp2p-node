@@ -20,7 +20,7 @@ libp2p node address: /ip4/127.0.0.1/tcp/61790/ipfs/QmZKjsGJ6ukXVRXVEcExx9GhiyWoJ
 In another terminal window, let’s run a second node but pass the address of the first node, and we should see some ping responses logged:
 
 ```bash
-$ ./libp2p-node /ip4/127.0.0.1/tcp/61790/ipfs/QmZKjsGJ6ukXVRXVEcExx9GhiyWoJC97onYpzBwCHPWqpL
+$ ./libp2p-node -d /ip4/127.0.0.1/tcp/61790/ipfs/QmZKjsGJ6ukXVRXVEcExx9GhiyWoJC97onYpzBwCHPWqpL
 libp2p node address: /ip4/127.0.0.1/tcp/61846/ipfs/QmVyKLTLswap3VYbpBATsgNpi6JdwSwsZALPxEnEbEndup
 sending 5 ping messages to /ip4/127.0.0.1/tcp/61790/ipfs/QmZKjsGJ6ukXVRXVEcExx9GhiyWoJC97onYpzBwCHPWqpL
 pinged /ip4/127.0.0.1/tcp/61790/ipfs/QmZKjsGJ6ukXVRXVEcExx9GhiyWoJC97onYpzBwCHPWqpL in 431.231µs
@@ -34,4 +34,4 @@ Success! Our two peers are now communicating using go-libp2p! Sure, they can onl
 
 ## reference
 
-Getting started with go-libp2p: <https://docs.libp2p.io/tutorials/getting-started/go/>
+Getting started with go-libp2p: <https://docs.libp2p.io/guides/getting-started/go/>

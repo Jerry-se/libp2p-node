@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,12 +16,25 @@ import (
 )
 
 func main() {
-	// start a libp2p node that listens on a random local TCP port,
-	// but without running the built-in ping protocol
-	node, err := libp2p.New(
+	pskString := flag.String("psk", "", "Pre-Shared Key")
+	target := flag.String("d", "", "target peer to dial")
+	flag.Parse()
+
+	opts := []libp2p.Option{
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 		libp2p.Ping(false),
-	)
+	}
+	if *pskString != "" {
+		psk, err := hex.DecodeString(*pskString)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Pre-Shared Key ", psk)
+		opts = append(opts, libp2p.PrivateNetwork(psk))
+	}
+	// start a libp2p node that listens on a random local TCP port,
+	// but without running the built-in ping protocol
+	node, err := libp2p.New(opts...)
 	if err != nil {
 		panic(err)
 	}
@@ -38,12 +53,15 @@ func main() {
 		Addrs: node.Addrs(),
 	}
 	addrs, err := peerstore.AddrInfoToP2pAddrs(&peerInfo)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("libp2p node address:", addrs[0])
 
 	// if a remote peer has been passed on the command line, connect to it
 	// and send it 5 ping messages, otherwise wait for a signal to stop
-	if len(os.Args) > 1 {
-		addr, err := multiaddr.NewMultiaddr(os.Args[1])
+	if *target != "" {
+		addr, err := multiaddr.NewMultiaddr(*target)
 		if err != nil {
 			panic(err)
 		}
