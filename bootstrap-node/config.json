@@ -1,0 +1,43 @@
+{
+	"Bootstrap":["/ip4/122.99.183.54/tcp/7001/p2p/12D3KooWSpgWzEXE5GNjY6hgdAhuuBLe4d3ocqWDnVLdCa8U3cig"],
+	"API": {
+		"HTTPHeaders": {
+			"Access-Control-Allow-Methods": ["GET", "PUT", "POST"],
+			"Access-Control-Allow-Origin": ["*"]
+		}
+	},
+	"Addresses": {
+		"API":"ip4/0.0.0.0/tcp/8519",
+		"Swarm": [
+			"/ip4/0.0.0.0/tcp/8511",
+			"/ip4/0.0.0.0/udp/8512/quic-v1",
+			"/ip4/0.0.0.0/udp/8512/quic-v1/webtransport"
+		],
+		"Announce":[],
+		"AppendAnnounce":[],
+		"NoAnnounce":[]
+	},
+	"Identity": {
+		"PeerId":"12D3KooWNp5pyEAtXs52RqssBkrCGojyNLWiZysjr8EpXKK4rpyp",
+		"PeerID":"12D3KooWNp5pyEAtXs52RqssBkrCGojyNLWiZysjr8EpXKK4rpyp",
+		"PrivKey":"CAESQJNpREhAAqxFLW3Zolqs9zr2/VbKNm9Cn/BXGokTRJjEwRV0CsA5CN6Dns+Sl8MaYz46YFA4e38aNSYhwquHlRM="
+	},
+	"Gateway": {
+		"APICommands": [],
+		"HTTPHeaders": {
+			"Access-Control-Allow-Headers": [
+				"X-Requested-With",
+				"Range",
+				"User-Agent"
+			],
+			"Access-Control-Allow-Methods": ["GET", "PUT", "POST"],
+			"Access-Control-Allow-Origin": ["*"]
+		},
+		"NoDNSLink": false,
+		"NoFetch": false,
+		"PathPrefixes": [],
+		"PublicGateways": null,
+		"RootRedirect": "",
+		"Writable": false
+	}
+}
